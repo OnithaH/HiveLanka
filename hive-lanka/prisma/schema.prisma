@@ -1,0 +1,466 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================
+// USER MANAGEMENT
+// ============================================
+
+model User {
+  id            String    @id @default(uuid())
+  clerkId       String    @unique
+  email         String    @unique
+  name          String
+  phone         String?
+  role          UserRole  @default(CUSTOMER)
+  verified      Boolean   @default(false)
+  
+  // Profile
+  avatar        String?
+  location      String?
+  district      String?
+  bio           String?
+  
+  // Seller specific
+  businessName  String?
+  businessType  String?
+  businessRegNo String?
+  nicDocument   String?   // URL to uploaded NIC
+  businessDoc   String?   // URL to business certificate
+  
+  // Timestamps
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  
+  // Relations
+  products      Product[]
+  orders        Order[]
+  sellerOrders  Order[]   @relation("SellerOrders")
+  reviews       Review[]
+  cartItems     CartItem[]
+  donations     Donation[]
+  campaigns     FundraisingCampaign[]
+  eventSubmissions EventSubmission[]
+  quoteRequests QuoteRequest[]
+  loyaltyPoints LoyaltyPoints? 
+  
+  @@index([clerkId])
+  @@index([email])
+}
+
+enum UserRole {
+  GUEST
+  CUSTOMER
+  SELLER
+  ADMIN
+}
+
+// ============================================
+// PRODUCTS & CATALOG
+// ============================================
+
+model Product {
+  id              String    @id @default(uuid())
+  sellerId        String
+  seller          User      @relation(fields: [sellerId], references: [id], onDelete: Cascade)
+  
+  name            String
+  description     String    @db.Text
+  price           Decimal   @db.Decimal(10, 2)
+  category        String
+  subCategory     String? 
+  stockQuantity   Int       @default(0)
+  
+  images          String[]  // Array of Azure Blob URLs
+  
+  // Wholesale/B2B fields
+  isWholesale     Boolean   @default(false)
+  rawMaterialType RawMaterialType? 
+  minimumOrderQty Int? 
+  bulkPricingAvailable Boolean @default(false)
+  deliveryAvailable Boolean @default(true)
+  deliveryAreas   String? 
+  
+  // Metrics
+  views           Int       @default(0)
+  sold            Int       @default(0)
+  averageRating   Float     @default(0)
+  
+  // Status
+  status          ProductStatus @default(ACTIVE)
+  
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  
+  // Relations
+  orderItems      OrderItem[]
+  reviews         Review[]
+  cartItems       CartItem[]
+  
+  @@index([sellerId])
+  @@index([category])
+  @@index([isWholesale, rawMaterialType])
+}
+
+enum ProductStatus {
+  ACTIVE
+  INACTIVE
+  OUT_OF_STOCK
+  DELETED
+}
+
+enum RawMaterialType {
+  CLAY
+  FABRIC
+  WOOD
+  METAL
+  GEMSTONES
+  DYES
+  PACKAGING
+  TOOLS
+  OTHER
+}
+
+// ============================================
+// SHOPPING CART
+// ============================================
+
+model CartItem {
+  id          String   @id @default(uuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete:  Cascade)
+  productId   String
+  product     Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  quantity    Int      @default(1)
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  @@unique([userId, productId])
+  @@index([userId])
+}
+
+// ============================================
+// ORDERS & CHECKOUT
+// ============================================
+
+model Order {
+  id              String      @id @default(uuid())
+  orderNumber     String      @unique
+  
+  customerId      String
+  customer        User        @relation(fields: [customerId], references: [id])
+  
+  sellerId        String
+  seller          User        @relation("SellerOrders", fields:  [sellerId], references: [id])
+  
+  // Totals
+  subtotal        Decimal     @db.Decimal(10, 2)
+  deliveryFee     Decimal     @db.Decimal(10, 2) @default(0)
+  discount        Decimal     @db.Decimal(10, 2) @default(0)
+  total           Decimal     @db.Decimal(10, 2)
+  
+  // Delivery
+  deliveryAddress String      @db.Text
+  deliveryPhone   String
+  
+  // Payment
+  paymentMethod   PaymentMethod
+  paymentStatus   PaymentStatus @default(PENDING)
+  
+  // Order Status
+  status          OrderStatus @default(PLACED)
+  
+  // Tracking
+  packedAt        DateTime?
+  shippedAt       DateTime?
+  deliveredAt     DateTime?
+  
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+  
+  // Relations
+  items           OrderItem[]
+  
+  @@index([customerId])
+  @@index([sellerId])
+  @@index([orderNumber])
+}
+
+enum PaymentMethod {
+  CARD
+  COD
+  BANK_TRANSFER
+}
+
+enum PaymentStatus {
+  PENDING
+  COMPLETED
+  FAILED
+  REFUNDED
+}
+
+enum OrderStatus {
+  PLACED
+  CONFIRMED
+  PACKED
+  SHIPPED
+  OUT_FOR_DELIVERY
+  DELIVERED
+  CANCELLED
+}
+
+model OrderItem {
+  id          String   @id @default(uuid())
+  orderId     String
+  order       Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  productId   String
+  product     Product  @relation(fields: [productId], references: [id])
+  
+  quantity    Int
+  price       Decimal  @db.Decimal(10, 2)  // Price at time of purchase
+  subtotal    Decimal  @db.Decimal(10, 2)
+  
+  @@index([orderId])
+}
+
+// ============================================
+// REVIEWS & RATINGS
+// ============================================
+
+model Review {
+  id          String   @id @default(uuid())
+  productId   String
+  product     Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  rating      Int      // 1-5
+  comment     String?   @db.Text
+  images      String[] // Photo reviews
+  
+  verified    Boolean  @default(false) // Verified purchase
+  helpful     Int      @default(0)
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  @@unique([productId, userId])
+  @@index([productId])
+}
+
+// ============================================
+// FUNDRAISING/DONATIONS
+// ============================================
+
+model FundraisingCampaign {
+  id              String   @id @default(uuid())
+  sellerId        String
+  seller          User     @relation(fields: [sellerId], references: [id], onDelete: Cascade)
+  
+  title           String
+  story           String   @db.Text
+  goal            Decimal  @db.Decimal(10, 2)
+  raised          Decimal  @db.Decimal(10, 2) @default(0)
+  
+  // Verification
+  gramaNiladariDoc String  // URL to uploaded document
+  
+  status          CampaignStatus @default(PENDING)
+  
+  // Dates
+  startDate       DateTime? 
+  endDate         DateTime? 
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  // Relations
+  donations       Donation[]
+  
+  @@index([sellerId])
+  @@index([status])
+}
+
+enum CampaignStatus {
+  PENDING
+  APPROVED
+  ACTIVE
+  COMPLETED
+  REJECTED
+}
+
+model Donation {
+  id          String   @id @default(uuid())
+  campaignId  String
+  campaign    FundraisingCampaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  donorId     String
+  donor       User     @relation(fields: [donorId], references: [id])
+  
+  amount      Decimal  @db.Decimal(10, 2)
+  message     String?   @db.Text
+  anonymous   Boolean  @default(false)
+  
+  createdAt   DateTime @default(now())
+  
+  @@index([campaignId])
+  @@index([donorId])
+}
+
+// ============================================
+// EVENTS
+// ============================================
+
+model EventSubmission {
+  id              String   @id @default(uuid())
+  submittedBy     String
+  submitter       User     @relation(fields:  [submittedBy], references:  [id], onDelete: Cascade)
+  
+  eventName       String
+  eventType       EventType
+  date            DateTime
+  time            String
+  location        String
+  venue           String
+  description     String   @db.Text
+  
+  registrationRequired Boolean @default(false)
+  registrationLink String? 
+  contactPhone    String
+  contactEmail    String
+  
+  referenceImages String[] // Images uploaded by submitter
+  
+  status          SubmissionStatus @default(PENDING)
+  adminNotes      String?  @db.Text
+  
+  submittedAt     DateTime @default(now())
+  reviewedAt      DateTime?
+  publishedEventId String?  @unique
+  publishedEvent  Event?   @relation(fields:  [publishedEventId], references:  [id])
+  
+  @@index([submittedBy])
+  @@index([status])
+}
+
+enum EventType {
+  CRAFT_FAIR
+  WORKSHOP
+  EXHIBITION
+  MARKET
+  OTHER
+}
+
+enum SubmissionStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+model Event {
+  id              String   @id @default(uuid())
+  title           String
+  type            EventType
+  date            DateTime
+  time            String
+  location        String
+  venue           String
+  description     String   @db.Text
+  
+  posterImage     String   // Admin-created poster
+  additionalImages String[]
+  
+  registrationLink String?
+  contactPhone    String
+  contactEmail    String
+  
+  organizerId     String   // Original submitter
+  
+  views           Int      @default(0)
+  rsvpCount       Int      @default(0)
+  
+  publishedAt     DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  // Link back to submission
+  submission      EventSubmission?
+  
+  @@index([date])
+  @@index([type])
+}
+
+// ============================================
+// B2B / QUOTE REQUESTS
+// ============================================
+
+model QuoteRequest {
+  id              String   @id @default(uuid())
+  productId       String
+  
+  supplierId      String
+  buyerId         String
+  buyer           User     @relation(fields:  [buyerId], references: [id], onDelete: Cascade)
+  
+  quantity        Int
+  quantityUnit    String
+  deliveryRequired Boolean
+  deliveryAddress String?   @db.Text
+  notes           String?  @db.Text
+  
+  status          QuoteStatus @default(PENDING)
+  
+  requestedAt     DateTime @default(now())
+  respondedAt     DateTime?
+  
+  @@index([supplierId])
+  @@index([buyerId])
+}
+
+enum QuoteStatus {
+  PENDING
+  QUOTED
+  COMPLETED
+  CANCELLED
+}
+
+// ============================================
+// LOYALTY PROGRAM
+// ============================================
+
+model LoyaltyPoints {
+  id          String   @id @default(uuid())
+  userId      String   @unique
+  user        User     @relation(fields: [userId], references: [id], onDelete:  Cascade)
+  
+  points      Int      @default(0)
+  lifetime    Int      @default(0) // Total points ever earned
+  
+  updatedAt   DateTime @updatedAt
+}
+
+model PointTransaction {
+  id          String   @id @default(uuid())
+  userId      String
+  
+  type        TransactionType
+  points      Int
+  description String
+  
+  orderId     String?   // If earned from order
+  
+  createdAt   DateTime @default(now())
+  
+  @@index([userId])
+}
+
+enum TransactionType {
+  EARNED
+  REDEEMED
+  EXPIRED
+  BONUS
+}
