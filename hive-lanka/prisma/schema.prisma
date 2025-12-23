@@ -394,6 +394,19 @@ model Event {
   @@index([type])
 }
 
+//Advertsising
+model Advertisement {
+  id        String   @id @default(cuid())
+  title     String
+  image     String
+  link      String? 
+  active    Boolean  @default(true)
+  order     Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+
 // ============================================
 // B2B / QUOTE REQUESTS
 // ============================================
