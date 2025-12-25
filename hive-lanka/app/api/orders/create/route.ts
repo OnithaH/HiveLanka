@@ -14,7 +14,7 @@ export async function POST(request: NextRequest) {
     const { clerkId, items, shippingAddress, paymentMethod, notes, totalAmount } = body;
 
     // Validate required fields
-    if (!clerkId || !items || !shippingAddress || !totalAmount) {
+    if (! clerkId || !items || ! shippingAddress || !totalAmount) {
       return NextResponse.json(
         { error: 'Missing required fields' },
         { status: 400 }
@@ -30,9 +30,9 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 });
     }
 
-    // Get seller ID from first item (assuming all items from same seller for now)
+    // Get seller ID from first item
     const firstProduct = await prisma.product.findUnique({
-      where: { id: items[0].id },
+      where: { id: items[0]. id },
       select: { sellerId: true },
     });
 
@@ -44,7 +44,7 @@ export async function POST(request: NextRequest) {
     const subtotal = items.reduce((sum: number, item: any) => 
       sum + (item.price * item.quantity), 0
     );
-    const deliveryFee = 300; // Fixed delivery fee
+    const deliveryFee = 300;
     const total = subtotal + deliveryFee;
 
     // Format delivery address
@@ -59,7 +59,7 @@ export async function POST(request: NextRequest) {
         subtotal:  subtotal,
         deliveryFee: deliveryFee,
         discount: 0,
-        total: total,
+        total:  total,
         deliveryAddress: deliveryAddressText,
         deliveryPhone: shippingAddress.phone,
         paymentMethod: paymentMethod === 'COD' ? 'COD' : paymentMethod === 'BANK' ? 'BANK_TRANSFER' : 'CARD',
@@ -79,10 +79,31 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    return NextResponse.json({ 
+    // 🎁 AWARD LOYALTY POINTS
+    const pointsEarned = Math.floor(total / 100); // 1 point per Rs. 100
+
+    try {
+      // Call loyalty API to award points
+      await fetch(`${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/api/loyalty/earn`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userId: user.id,
+          points: pointsEarned,
+          orderId: order.id,
+          description: `Earned from order ${order.orderNumber}`,
+        }),
+      });
+    } catch (loyaltyError) {
+      // Don't fail the order if loyalty fails
+      console. error('Loyalty points error (non-critical):', loyaltyError);
+    }
+
+    return NextResponse. json({ 
       success: true, 
       orderId: order.id,
-      orderNumber: order.orderNumber,
+      orderNumber: order. orderNumber,
+      pointsEarned, // 🎁 Tell customer they earned points
       message: 'Order placed successfully!' 
     });
 

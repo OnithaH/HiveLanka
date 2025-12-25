@@ -2644,3 +2644,217 @@ a {
     width: 100%;
   }
 }
+
+
+/* ============================================ */
+/* LOYALTY POINTS PAGE */
+/* ============================================ */
+
+.loyalty-page {
+  min-height: 80vh;
+  padding: 60px 20px;
+  background: linear-gradient(135deg, #E8F5E9 0%, #FFF8E1 100%);
+}
+
+.loyalty-header {
+  text-align: center;
+  margin-bottom: 50px;
+}
+
+.loyalty-header h1 {
+  font-size: 3rem;
+  font-weight: 800;
+  color: #2E7D32;
+  margin-bottom: 15px;
+}
+
+.loyalty-header p {
+  font-size: 1.2rem;
+  color: #666;
+}
+
+.loyalty-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 25px;
+  margin-bottom:  60px;
+}
+
+.loyalty-card {
+  background: white;
+  border-radius: 20px;
+  padding: 35px;
+  display: flex;
+  align-items: center;
+  gap: 25px;
+  box-shadow: 0 5px 20px rgba(0,0,0,0.08);
+  transition: transform 0.3s;
+}
+
+.loyalty-card:hover {
+  transform: translateY(-5px);
+}
+
+.loyalty-card.primary {
+  background: linear-gradient(135deg, #7CB342, #8BC34A);
+  color: white;
+}
+
+.card-icon {
+  font-size: 3.5rem;
+}
+
+.card-content h3 {
+  font-size: 1rem;
+  margin-bottom: 12px;
+  opacity: 0.9;
+}
+
+.points-number {
+  font-size: 3rem;
+  font-weight:  800;
+  margin-bottom: 8px;
+}
+
+.points-value {
+  font-size: 0.95rem;
+  opacity: 0.8;
+}
+
+.tier-badge {
+  display: inline-block;
+  padding: 8px 20px;
+  background: #FFD700;
+  color: #333;
+  border-radius: 20px;
+  font-weight: 700;
+  font-size: 1.2rem;
+}
+
+.how-it-works {
+  background: white;
+  border-radius: 20px;
+  padding: 40px;
+  margin-bottom: 40px;
+}
+
+.how-it-works h2 {
+  text-align: center;
+  font-size: 2rem;
+  color: #2E7D32;
+  margin-bottom: 40px;
+}
+
+.steps {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 30px;
+}
+
+.step {
+  text-align: center;
+}
+
+.step-number {
+  width: 60px;
+  height: 60px;
+  background: linear-gradient(135deg, #7CB342, #8BC34A);
+  color: white;
+  border-radius: 50%;
+  display:  flex;
+  align-items:  center;
+  justify-content:  center;
+  font-size: 1.8rem;
+  font-weight:  800;
+  margin: 0 auto 20px;
+}
+
+.step h3 {
+  font-size: 1.3rem;
+  color: #333;
+  margin-bottom: 10px;
+}
+
+.step p {
+  color: #666;
+  line-height: 1.6;
+}
+
+.transactions-section {
+  background: white;
+  border-radius: 20px;
+  padding: 35px;
+  margin-bottom:  30px;
+}
+
+.transactions-section h2 {
+  font-size: 1.5rem;
+  color: #333;
+  margin-bottom: 25px;
+}
+
+.transactions-list {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.transaction-item {
+  display: grid;
+  grid-template-columns: 50px 1fr auto;
+  gap: 15px;
+  padding: 15px;
+  background: #F9F9F9;
+  border-radius: 12px;
+  align-items:  center;
+}
+
+.txn-icon {
+  font-size: 1.8rem;
+  text-align: center;
+}
+
+.txn-desc {
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 5px;
+}
+
+.txn-date {
+  font-size: 0.85rem;
+  color: #999;
+}
+
+.txn-points {
+  font-size:  1.3rem;
+  font-weight:  700;
+}
+
+.txn-points.earned {
+  color: #2E7D32;
+}
+
+.txn-points.redeemed {
+  color: #F44336;
+}
+
+.no-transactions {
+  text-align: center;
+  padding: 40px 20px;
+  color: #999;
+}
+
+@media (max-width: 768px) {
+  .loyalty-header h1 {
+    font-size: 2rem;
+  }
+
+  .loyalty-cards {
+    grid-template-columns: 1fr;
+  }
+
+  .transaction-item {
+    grid-template-columns: 40px 1fr auto;
+    gap: 10px;
+  }
+}

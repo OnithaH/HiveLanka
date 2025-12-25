@@ -121,6 +121,7 @@ export default function Header() {
           <Link href="/forum"><button className="nav-button">Community Forum</button></Link>
           <Link href="/tutorials"><button className="nav-button">Tutorials</button></Link>
           <Link href="/events"><button className="nav-button">Events</button></Link>
+          <Link href="/loyalty"><button className="nav-button">Points</button></Link>
           <Link href="/about"><button className="nav-button">About Us</button></Link>
           <Link href="/contact"><button className="nav-button">Contact</button></Link>
           <Link href="/faq"><button className="nav-button">FAQ</button></Link>
