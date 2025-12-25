@@ -22,7 +22,7 @@ export default function SellerDashboard() {
 
   const fetchSellerStats = async () => {
     try {
-      const response = await fetch(`/api/seller/stats? clerkId=${user?. id}`);
+      const response = await fetch(`/api/seller/stats?clerkId=${user?. id}`);
       const data = await response.json();
       
       if (data.success) {

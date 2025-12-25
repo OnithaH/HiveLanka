@@ -5,6 +5,7 @@ import Image from 'next/image';
 import { useState, useEffect } from 'react';
 import { Search, Mic, Camera, ShoppingCart, User, Globe, ChevronDown, Store } from 'lucide-react';
 import { SignedIn, SignedOut, UserButton } from '@clerk/nextjs';
+import VoiceSearch from '@/components/search/VoiceSearch';
 
 export default function Header() {
   const [languageDropdownOpen, setLanguageDropdownOpen] = useState(false);
@@ -74,9 +75,9 @@ export default function Header() {
 
         <div className="center-section">
           <div className="search-container">
-            <Mic style={{ width: '20px', height: '20px', cursor: 'pointer', flexShrink: 0, color: '#000000' }} />
+            <VoiceSearch/>
             <span className="divider"></span> 
-            <Camera style={{ width: '20px', height: '20px', marginLeft: '5px', cursor: 'pointer', flexShrink: 0, color: '#000000' }} />
+            <Link href="/visual-search"><Camera style={{ width: '20px', height: '20px', marginLeft: '5px', cursor: 'pointer', flexShrink: 0, color: '#000000' }} /></Link>
             <input type="text" className="search-input" placeholder="Search...  "/>              
             <Search style={{ width: '20px', height: '20px', cursor: 'pointer', flexShrink: 0, color:  '#000000' }} />
           </div>
