@@ -34,7 +34,6 @@ export const PRODUCT_CATEGORIES = [
   // Metalwork
   "Brass Items",
   "Copper Items",
-  "Silver Jewelry",
   "Metal Sculptures",
   "Metal Lamps",
   "Traditional Bells",
@@ -106,7 +105,6 @@ export const PRODUCT_CATEGORIES = [
   
   // Toys & Games
   "Traditional Toys",
-  "Wooden Toys",
   "Clay Toys",
   "Educational Toys",
   "Board Games",
@@ -117,7 +115,6 @@ export const PRODUCT_CATEGORIES = [
   "Traditional Sweets",
   "Coconut Products",
   "Honey",
-  "Ayurvedic Products",
   
   // Beauty & Wellness
   "Natural Soaps",

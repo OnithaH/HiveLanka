@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { useState, useEffect } from 'react';
-import { Search, Mic, Camera, ShoppingCart, User, Globe, ChevronDown } from 'lucide-react';
+import { Search, Mic, Camera, ShoppingCart, User, Globe, ChevronDown, Store } from 'lucide-react';
 import { SignedIn, SignedOut, UserButton } from '@clerk/nextjs';
 
 export default function Header() {
@@ -98,7 +98,21 @@ export default function Header() {
                   avatarBox: "w-10 h-10"
                 }
               }}
-            />
+            >
+              <UserButton.MenuItems>
+                <UserButton. Link
+                  label="Seller Dashboard"
+                  labelIcon={<Store size={16} />}
+                  href="/seller/dashboard"
+                />
+                <UserButton.Link
+                  label="My Orders"
+                  labelIcon={<ShoppingCart size={16} />}
+                  href="/orders"
+                />
+                <UserButton.Action label="manageAccount" />
+              </UserButton.MenuItems>
+            </UserButton>
           </SignedIn>
           
           <SignedOut>

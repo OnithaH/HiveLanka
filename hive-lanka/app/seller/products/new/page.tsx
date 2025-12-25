@@ -62,7 +62,6 @@ export default function AddProductPage() {
       }
 
       setImages([...images, ... uploadedUrls]);
-      alert(`✅ ${uploadedUrls. length} image(s) uploaded successfully!`);
 
     } catch (error) {
       console.error('Upload error:', error);
@@ -270,7 +269,7 @@ export default function AddProductPage() {
                   checked={isWholesale}
                   onChange={(e) => setIsWholesale(e.target.checked)}
                 />
-                <span>Available for wholesale</span>
+                <span>&nbsp;&nbsp;&nbsp;Available for wholesale</span>
               </label>
             </div>
 
@@ -281,7 +280,7 @@ export default function AddProductPage() {
                   checked={deliveryAvailable}
                   onChange={(e) => setDeliveryAvailable(e.target.checked)}
                 />
-                <span>Delivery available</span>
+                <span>&nbsp;&nbsp;&nbsp;Delivery available</span>
               </label>
             </div>
           </section>
@@ -293,7 +292,7 @@ export default function AddProductPage() {
               className="btn-primary"
               disabled={loading || images.length === 0}
             >
-              {loading ? 'Creating Product...' : '✅ Create Product'}
+              {loading ? 'Creating Product...' : 'Create Product'}
             </button>
           </div>
         </form>
