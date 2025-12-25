@@ -94,7 +94,7 @@ export default function CheckoutPage() {
         localStorage.removeItem('cart');
         
         // Redirect to success page
-        router.push(`/order-success?orderId=${data.orderId}`);
+        router.push(`/order-success?orderId=${data.orderId}&orderNumber=${data.orderNumber}&points=${data.pointsEarned}`);
       } else {
         alert(`Error: ${data.error}`);
       }

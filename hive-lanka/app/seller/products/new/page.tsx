@@ -4,11 +4,13 @@ import { useState } from 'react';
 import { useUser } from '@clerk/nextjs';
 import { useRouter } from 'next/navigation';
 import { PRODUCT_CATEGORIES } from '@/lib/categories';
+import Image from 'next/image';
 
 export default function AddProductPage() {
   const { user } = useUser();
   const router = useRouter();
   const [loading, setLoading] = useState(false);
+  const [uploading, setUploading] = useState(false);
 
   // Form state
   const [name, setName] = useState('');
@@ -16,21 +18,76 @@ export default function AddProductPage() {
   const [price, setPrice] = useState('');
   const [category, setCategory] = useState('');
   const [stockQuantity, setStockQuantity] = useState('');
-  const [imageUrls, setImageUrls] = useState('');
+  const [images, setImages] = useState<string[]>([]); // Changed from imageUrls to images array
   const [isWholesale, setIsWholesale] = useState(false);
   const [deliveryAvailable, setDeliveryAvailable] = useState(true);
+  const [categorySearch, setCategorySearch] = useState('');
+  const [showCategoryDropdown, setShowCategoryDropdown] = useState(false);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+    // Filter categories
+    const filteredCategories = PRODUCT_CATEGORIES.filter(cat =>
+    cat.toLowerCase().includes(categorySearch.toLowerCase())
+    );
+
+  // Handle image upload to Azure
+  const handleImageUpload = async (e: React. ChangeEvent<HTMLInputElement>) => {
+    const files = e. target.files;
+    if (! files || files.length === 0) return;
+
+    setUploading(true);
+
+    try {
+      const uploadedUrls: string[] = [];
+
+      for (const file of Array.from(files)) {
+        console.log('📤 Uploading:', file.name);
+
+        const formData = new FormData();
+        formData.append('file', file);
+
+        const response = await fetch('/api/upload', {
+          method: 'POST',
+          body: formData,
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+          uploadedUrls.push(data.url);
+          console.log('✅ Uploaded:', data.url);
+        } else {
+          console.error('❌ Upload failed:', data.error);
+          alert(`Failed to upload ${file.name}`);
+        }
+      }
+
+      setImages([...images, ... uploadedUrls]);
+      alert(`✅ ${uploadedUrls. length} image(s) uploaded successfully!`);
+
+    } catch (error) {
+      console.error('Upload error:', error);
+      alert('Failed to upload images');
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  // Remove image
+  const removeImage = (index:  number) => {
+    setImages(images.filter((_, i) => i !== index));
+  };
+
+  const handleSubmit = async (e:  React.FormEvent) => {
     e.preventDefault();
+
+    if (images.length === 0) {
+      alert('Please upload at least one image');
+      return;
+    }
+
     setLoading(true);
 
     try {
-      // Split comma-separated image URLs into array
-      const imagesArray = imageUrls
-        .split(',')
-        .map(url => url.trim())
-        .filter(url => url. length > 0);
-
       const response = await fetch('/api/products/create', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -40,8 +97,8 @@ export default function AddProductPage() {
           description,
           price:  parseFloat(price),
           category,
-          stockQuantity:  parseInt(stockQuantity),
-          images: imagesArray,
+          stockQuantity: parseInt(stockQuantity),
+          images, // Now using uploaded URLs from Azure
           isWholesale,
           deliveryAvailable,
         }),
@@ -100,19 +157,40 @@ export default function AddProductPage() {
             </div>
 
             <div className="form-row">
-              <div className="form-group">
+                <div className="form-group">
                 <label>Category *</label>
-                <select
-                  value={category}
-                  onChange={(e) => setCategory(e.target.value)}
-                  required
-                >
-                  <option value="">Select Category</option>
-                  {PRODUCT_CATEGORIES.map((cat) => (
-                    <option key={cat} value={cat}>{cat}</option>
-                  ))}
-                </select>
-              </div>
+                <div className="category-input-wrapper">
+                    <input
+                    type="text"
+                    value={categorySearch}
+                    onChange={(e) => {
+                        setCategorySearch(e. target.value);
+                        setShowCategoryDropdown(true);
+                    }}
+                    onFocus={() => setShowCategoryDropdown(true)}
+                    placeholder="Type to search categories..."
+                    required
+                    />
+                    
+                    {showCategoryDropdown && filteredCategories.length > 0 && (
+                    <div className="category-dropdown">
+                        {filteredCategories.map((cat) => (
+                        <div
+                            key={cat}
+                            className="category-option"
+                            onClick={() => {
+                            setCategory(cat);
+                            setCategorySearch(cat);
+                            setShowCategoryDropdown(false);
+                            }}
+                        >
+                            {cat}
+                        </div>
+                        ))}
+                    </div>
+                    )}
+                </div>
+                </div>
 
               <div className="form-group">
                 <label>Price (LKR) *</label>
@@ -122,7 +200,6 @@ export default function AddProductPage() {
                   onChange={(e) => setPrice(e.target.value)}
                   placeholder="0.00"
                   step="0.01"
-                  min="0"
                   required
                 />
               </div>
@@ -134,47 +211,70 @@ export default function AddProductPage() {
                 type="number"
                 value={stockQuantity}
                 onChange={(e) => setStockQuantity(e.target.value)}
-                placeholder="How many items do you have?"
-                min="0"
+                placeholder="0"
                 required
               />
             </div>
           </section>
 
-          {/* Product Images */}
+          {/* Image Upload Section */}
           <section className="form-section">
             <h2>Product Images</h2>
-            <p className="section-note">
-              Enter image URLs separated by commas.  First image will be the main image.
-            </p>
 
             <div className="form-group">
-              <label>Image URLs *</label>
-              <textarea
-                value={imageUrls}
-                onChange={(e) => setImageUrls(e.target.value)}
-                placeholder="https://example.com/image1.jpg, https://example.com/image2.jpg"
-                rows={4}
-                required
+              <label>Upload Images (Max 5) *</label>
+              <input
+                type="file"
+                accept="image/*"
+                multiple
+                onChange={handleImageUpload}
+                disabled={uploading || images.length >= 5}
+                className="file-input"
               />
-              <small>Tip: Upload images to Imgur, Cloudinary, or use placeholder images for testing</small>
+              {uploading && <p className="upload-status">⏳ Uploading...</p>}
             </div>
+
+            {/* Image Previews */}
+            {images.length > 0 && (
+              <div className="image-previews">
+                {images. map((url, index) => (
+                  <div key={index} className="image-preview-item">
+                    <Image
+                      src={url}
+                      alt={`Product ${index + 1}`}
+                      width={150}
+                      height={150}
+                      className="preview-image"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => removeImage(index)}
+                      className="remove-image-btn"
+                    >
+                      ✕
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
           </section>
 
-          {/* Additional Options */}
+          {/* Options */}
           <section className="form-section">
-            <h2>Additional Options</h2>
+            <h2>Options</h2>
 
-            <div className="checkbox-group">
+            <div className="form-group">
               <label className="checkbox-label">
                 <input
                   type="checkbox"
                   checked={isWholesale}
                   onChange={(e) => setIsWholesale(e.target.checked)}
                 />
-                <span>This is a wholesale product (B2B)</span>
+                <span>Available for wholesale</span>
               </label>
+            </div>
 
+            <div className="form-group">
               <label className="checkbox-label">
                 <input
                   type="checkbox"
@@ -186,21 +286,14 @@ export default function AddProductPage() {
             </div>
           </section>
 
-          {/* Submit Buttons */}
+          {/* Submit Button */}
           <div className="form-actions">
             <button
-              type="button"
-              onClick={() => router.back()}
-              className="btn-secondary"
-            >
-              Cancel
-            </button>
-            <button
               type="submit"
-              disabled={loading}
               className="btn-primary"
+              disabled={loading || images.length === 0}
             >
-              {loading ? 'Adding Product...' : '✅ Add Product'}
+              {loading ? 'Creating Product...' : '✅ Create Product'}
             </button>
           </div>
         </form>

@@ -27,7 +27,7 @@ export default function LoyaltyPage() {
 
   const fetchLoyaltyData = async () => {
     try {
-      const response = await fetch(`/api/loyalty/get? clerkId=${user?. id}`);
+      const response = await fetch(`/api/loyalty/get?clerkId=${user?. id}`);
       const data = await response.json();
       
       if (data.success) {

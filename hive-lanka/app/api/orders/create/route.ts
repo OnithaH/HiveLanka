@@ -15,7 +15,7 @@ export async function POST(request: NextRequest) {
 
     // Validate required fields
     if (! clerkId || !items || ! shippingAddress || !totalAmount) {
-      return NextResponse.json(
+      return NextResponse. json(
         { error: 'Missing required fields' },
         { status: 400 }
       );
@@ -41,7 +41,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Calculate totals
-    const subtotal = items.reduce((sum: number, item: any) => 
+    const subtotal = items. reduce((sum: number, item:  any) => 
       sum + (item.price * item.quantity), 0
     );
     const deliveryFee = 300;
@@ -54,23 +54,23 @@ export async function POST(request: NextRequest) {
     const order = await prisma.order.create({
       data: {
         orderNumber: generateOrderNumber(),
-        customerId: user.id,
+        customerId: user. id,
         sellerId: firstProduct.sellerId,
         subtotal:  subtotal,
         deliveryFee: deliveryFee,
         discount: 0,
-        total:  total,
+        total: total,
         deliveryAddress: deliveryAddressText,
         deliveryPhone: shippingAddress.phone,
         paymentMethod: paymentMethod === 'COD' ? 'COD' : paymentMethod === 'BANK' ? 'BANK_TRANSFER' : 'CARD',
         paymentStatus: 'PENDING',
         status: 'PLACED',
         items: {
-          create: items. map((item: any) => ({
+          create:  items. map((item: any) => ({
             productId: item.id,
             quantity: item.quantity,
             price: item.price,
-            subtotal: item.price * item.quantity,
+            subtotal: item. price * item.quantity,
           })),
         },
       },
@@ -80,37 +80,67 @@ export async function POST(request: NextRequest) {
     });
 
     // 🎁 AWARD LOYALTY POINTS
-    const pointsEarned = Math.floor(total / 100); // 1 point per Rs. 100
+    const pointsEarned = Math.floor(total / 100);
 
-    try {
-      // Call loyalty API to award points
-      await fetch(`${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/api/loyalty/earn`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          userId: user.id,
-          points: pointsEarned,
-          orderId: order.id,
-          description: `Earned from order ${order.orderNumber}`,
-        }),
-      });
-    } catch (loyaltyError) {
-      // Don't fail the order if loyalty fails
-      console. error('Loyalty points error (non-critical):', loyaltyError);
+    console.log('🎁 ===== AWARDING LOYALTY POINTS =====');
+    console.log('User ID:', user.id);
+    console.log('Points to award:', pointsEarned);
+    console.log('Order ID:', order.id);
+    console.log('Order Number:', order.orderNumber);
+
+    if (pointsEarned > 0) {
+      try {
+        // Use Prisma directly (more reliable than fetch)
+        const loyalty = await prisma.loyaltyPoints. upsert({
+          where:  { userId: user.id },
+          update: {
+            points:  { increment: pointsEarned },
+            lifetime: { increment:  pointsEarned },
+          },
+          create: {
+            userId: user.id,
+            points: pointsEarned,
+            lifetime: pointsEarned,
+          },
+        });
+
+        console.log('✅ Loyalty points updated:', loyalty);
+
+        // Record transaction
+        const transaction = await prisma.pointTransaction.create({
+          data: {
+            userId:  user.id,
+            type: 'EARNED',
+            points: pointsEarned,
+            description: `Earned from order ${order.orderNumber}`,
+            orderId: order.id,
+          },
+        });
+
+        console.log('✅ Transaction recorded:', transaction);
+
+      } catch (loyaltyError:  any) {
+        console.error('❌ Loyalty error:', loyaltyError);
+        console.error('Error message:', loyaltyError.message);
+      }
+    } else {
+      console.log('⚠️ No points to award (order total too low)');
     }
 
-    return NextResponse. json({ 
+    console.log('🎁 ===== END LOYALTY POINTS =====');
+
+    return NextResponse.json({ 
       success: true, 
       orderId: order.id,
-      orderNumber: order. orderNumber,
-      pointsEarned, // 🎁 Tell customer they earned points
+      orderNumber: order.orderNumber,
+      pointsEarned,
       message: 'Order placed successfully!' 
     });
 
   } catch (error:  any) {
-    console.error('Order creation error:', error);
+    console.error('❌ Order creation error:', error);
     return NextResponse.json(
-      { error: error?. message || 'Failed to create order' },
+      { error: error?.message || 'Failed to create order' },
       { status: 500 }
     );
   }
