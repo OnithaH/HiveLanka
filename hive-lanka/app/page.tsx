@@ -12,27 +12,48 @@ type ProductWithSeller = {
   name: string;
   price:  number;
   images: string[];
+  category: string;
   seller: {
     businessName: string | null;
     verified: boolean;
   };
 };
 
+export const dynamic = 'force-dynamic'; // Add this to force dynamic rendering
+
 export default async function HomePage() {
   // Fetch data from database
-  const products = await prisma.product.findMany({
-    where: { status: 'ACTIVE' },
-    include: {
-      seller: {
-        select: {
-          businessName: true,
-          verified:  true,
+  let products: ProductWithSeller[] = [];
+
+  try {
+    const rawProducts = await prisma.product. findMany({
+      where: { status: 'ACTIVE' },
+      include: {
+        seller: {
+          select: {
+            businessName: true,
+            verified: true,
+          },
         },
       },
-    },
-    take: 8,
-    orderBy: { createdAt: 'desc' },
-  }) as ProductWithSeller[];
+      take: 8,
+      orderBy: { createdAt: 'desc' },
+    });
+
+    products = rawProducts.map(p => ({
+      id: p.id,
+      name: p.name,
+      price: Number(p.price),
+      images: p.images,
+      category: p.category,
+      seller: {
+        businessName: p.seller. businessName,
+        verified: p.seller.verified,
+      },
+    }));
+  } catch (error) {
+    console.error('Failed to fetch products:', error);
+  }
 
   return (
     <main className="main-content">
@@ -59,9 +80,13 @@ export default async function HomePage() {
 
           {/* Products Grid */}
           <div className="products-showcase-grid">
-            {products. map((product) => (
-              <ProductCard key={product.id} product={product} />
-            ))}
+            {products. length > 0 ? (
+              products.map((product) => (
+                <ProductCard key={product.id} product={product} />
+              ))
+            ) : (
+              <p>No products available</p>
+            )}
           </div>
         </div>
       </section>

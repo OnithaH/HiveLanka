@@ -2,25 +2,52 @@
 
 import Link from 'next/link';
 import Image from 'next/image';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Search, Mic, Camera, ShoppingCart, User, Globe, ChevronDown } from 'lucide-react';
+import { SignedIn, SignedOut, UserButton } from '@clerk/nextjs';
 
 export default function Header() {
   const [languageDropdownOpen, setLanguageDropdownOpen] = useState(false);
+
+  const [cartCount, setCartCount] = useState(0);
+
+    useEffect(() => {
+      const updateCartCount = () => {
+        const cart = JSON.parse(localStorage.getItem('cart') || '[]');
+        const count = cart.reduce((sum: number, item: any) => sum + item.quantity, 0);
+        setCartCount(count);
+      };
+
+      updateCartCount();
+      
+      // Listen for storage changes
+      window.addEventListener('storage', updateCartCount);
+      
+      // Check every second (in case same tab updates)
+      const interval = setInterval(updateCartCount, 1000);
+
+      return () => {
+        window.removeEventListener('storage', updateCartCount);
+        clearInterval(interval);
+      };
+    }, []);
+
 
   return (
     <header className="header">
       {/* Top row with logo, search, and user controls */}
       <div className="header-top">
         <div className="left-section">
-          <Image 
-            src="/images/logo.png" 
-            alt="HIVE Lanka Logo" 
-            width={110}
-            height={110}
-            className="logo"
-            priority
-          />
+          <Link href="/">
+            <Image 
+              src="/images/logo.png" 
+              alt="HIVE Lanka Logo" 
+              width={110}
+              height={110}
+              className="logo"
+              priority
+            />
+          </Link>
           
           <div 
             className="language-selector"
@@ -50,24 +77,38 @@ export default function Header() {
             <Mic style={{ width: '20px', height: '20px', cursor: 'pointer', flexShrink: 0, color: '#000000' }} />
             <span className="divider"></span> 
             <Camera style={{ width: '20px', height: '20px', marginLeft: '5px', cursor: 'pointer', flexShrink: 0, color: '#000000' }} />
-            <input type="text" className="search-input" placeholder="Search... "/>              
-            <Search style={{ width: '20px', height: '20px', cursor: 'pointer', flexShrink: 0, color: '#000000' }} />
+            <input type="text" className="search-input" placeholder="Search...  "/>              
+            <Search style={{ width: '20px', height: '20px', cursor: 'pointer', flexShrink: 0, color:  '#000000' }} />
           </div>
         </div>
 
         <div className="right-section">
           <Link href="/cart">
             <button className="cart-button">
-              <ShoppingCart style={{ width:  '22px', height: '22px', color: '#000000' }} />
+              <ShoppingCart style={{ width: '22px', height: '22px', color: '#000000' }} />
+              {cartCount > 0 && <span className="cart-badge">{cartCount}</span>}
             </button>
           </Link>
           
-          <Link href="/signin">
-            <div className="user-section">
-              <User style={{ width: '20px', height: '20px', color: '#000000' }} />
-              <span className="signin-text">Sign In</span>
-            </div>
-          </Link>
+          {/* Show User Button when signed in, Sign In link when not */}
+          <SignedIn>
+            <UserButton 
+              appearance={{
+                elements: {
+                  avatarBox: "w-10 h-10"
+                }
+              }}
+            />
+          </SignedIn>
+          
+          <SignedOut>
+            <Link href="/signin">
+              <div className="user-section">
+                <User style={{ width: '20px', height: '20px', color: '#000000' }} />
+                <span className="signin-text">Sign In</span>
+              </div>
+            </Link>
+          </SignedOut>
         </div>
       </div>
 
