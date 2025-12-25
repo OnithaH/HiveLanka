@@ -3542,3 +3542,154 @@ a {
     font-size: 1rem;
   }
 }
+
+/* Signin Redirect Animation */
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+
+
+
+/* ============================================ */
+/* LOYALTY POINTS CARD ON CHECKOUT */
+/* ============================================ */
+
+.loyalty-points-card {
+  background: linear-gradient(135deg, #FFF8E1, #FFE0B2);
+  border: 2px solid #FF9800;
+  border-radius:  15px;
+  padding: 25px;
+  margin-bottom: 20px;
+  box-shadow:  0 5px 15px rgba(255, 152, 0, 0.2);
+}
+
+.loyalty-points-card h2 {
+  font-size: 1.3rem;
+  color: #E65100;
+  margin-bottom: 15px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.points-available {
+  font-size: 1.1rem;
+  color: #5D4037;
+  margin-bottom: 8px;
+}
+
+.points-available strong {
+  color: #E65100;
+  font-size: 1.3rem;
+}
+
+.points-value {
+  font-size:  0.9rem;
+  color: #666;
+  margin-bottom: 20px;
+}
+
+.points-input-group {
+  display:  flex;
+  gap: 10px;
+  margin-bottom: 15px;
+}
+
+.points-input {
+  flex: 1;
+  padding: 12px 15px;
+  border: 2px solid #FF9800;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.points-input:focus {
+  outline: none;
+  border-color: #F57C00;
+  box-shadow: 0 0 0 3px rgba(255, 152, 0, 0.2);
+}
+
+.apply-points-btn {
+  background: #FF9800;
+  color:  white;
+  border: none;
+  padding: 12px 25px;
+  border-radius:  8px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 1rem;
+  transition: all 0.3s;
+}
+
+.apply-points-btn:hover {
+  background:  #F57C00;
+  transform:  translateY(-2px);
+  box-shadow: 0 4px 12px rgba(255, 152, 0, 0.4);
+}
+
+.use-all-points-btn {
+  width: 100%;
+  background: transparent;
+  color: #E65100;
+  border: 2px solid #FF9800;
+  padding: 10px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 0.95rem;
+  transition: all 0.3s;
+  margin-bottom: 15px;
+}
+
+.use-all-points-btn:hover {
+  background: #FF9800;
+  color: white;
+}
+
+.points-applied {
+  background: #4CAF50;
+  color:  white;
+  padding: 12px;
+  border-radius: 8px;
+  text-align: center;
+  font-weight: 600;
+  animation: fadeIn 0.5s;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.discount-row {
+  color: #4CAF50;
+  font-weight: 600;
+}
+
+.discount-row span:last-child {
+  color: #4CAF50;
+}
+
+/* Responsive */
+@media (max-width:  768px) {
+  .loyalty-points-card {
+    padding: 20px;
+  }
+
+  .points-input-group {
+    flex-direction: column;
+  }
+
+  .apply-points-btn {
+    width: 100%;
+  }
+}

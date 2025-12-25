@@ -22,7 +22,7 @@ model User {
   
   // Profile
   avatar        String?
-  location      String?
+  location      String? 
   district      String?
   bio           String?
   
@@ -30,7 +30,7 @@ model User {
   businessName  String?
   businessType  String?
   businessRegNo String?
-  nicDocument   String?   // URL to uploaded NIC
+  nicDocument   String?    // URL to uploaded NIC
   businessDoc   String?   // URL to business certificate
   
   // Timestamps
@@ -48,6 +48,7 @@ model User {
   eventSubmissions EventSubmission[]
   quoteRequests QuoteRequest[]
   loyaltyPoints LoyaltyPoints? 
+  pointTransactions PointTransaction[]  // ← ADDED
   
   @@index([clerkId])
   @@index([email])
@@ -167,6 +168,8 @@ model Order {
   
   // Delivery
   deliveryAddress String      @db.Text
+  deliveryCity    String?       // ← ADDED
+  deliveryPostalCode String?  // ← ADDED
   deliveryPhone   String
   
   // Payment
@@ -176,20 +179,32 @@ model Order {
   // Order Status
   status          OrderStatus @default(PLACED)
   
+  // Tracking (ADMIN FIELDS) ← ADDED
+  trackingNumber  String?              // ← ADDED
+  courierService  String?              // ← ADDED
+  estimatedDelivery DateTime?          // ← ADDED
+  adminNotes      String?    @db.Text  // ← ADDED
+  sellerReadyToShip Boolean  @default(false)  // ← ADDED
+  readyToShipAt   DateTime?            // ← ADDED
+  
   // Tracking
-  packedAt        DateTime?
-  shippedAt       DateTime?
-  deliveredAt     DateTime?
+  packedAt        DateTime? 
+  shippedAt       DateTime? 
+  deliveredAt     DateTime? 
+  cancelledAt     DateTime?            // ← ADDED
+  cancellationReason String?  @db.Text  // ← ADDED
   
   createdAt       DateTime    @default(now())
   updatedAt       DateTime    @updatedAt
   
   // Relations
   items           OrderItem[]
+  pointTransactions PointTransaction[]  // ← ADDED
   
   @@index([customerId])
   @@index([sellerId])
   @@index([orderNumber])
+  @@index([status])  // ← ADDED
 }
 
 enum PaymentMethod {
@@ -238,10 +253,10 @@ model Review {
   productId   String
   product     Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
   userId      String
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user        User     @relation(fields: [userId], references: [id], onDelete:  Cascade)
   
   rating      Int      // 1-5
-  comment     String?   @db.Text
+  comment     String?  @db.Text
   images      String[] // Photo reviews
   
   verified    Boolean  @default(false) // Verified purchase
@@ -298,12 +313,12 @@ enum CampaignStatus {
 model Donation {
   id          String   @id @default(uuid())
   campaignId  String
-  campaign    FundraisingCampaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  campaign    FundraisingCampaign @relation(fields: [campaignId], references: [id], onDelete:  Cascade)
   donorId     String
   donor       User     @relation(fields: [donorId], references: [id])
   
   amount      Decimal  @db.Decimal(10, 2)
-  message     String?   @db.Text
+  message     String?  @db.Text
   anonymous   Boolean  @default(false)
   
   createdAt   DateTime @default(now())
@@ -340,7 +355,7 @@ model EventSubmission {
   adminNotes      String?  @db.Text
   
   submittedAt     DateTime @default(now())
-  reviewedAt      DateTime?
+  reviewedAt      DateTime? 
   publishedEventId String?  @unique
   publishedEvent  Event?   @relation(fields:  [publishedEventId], references:  [id])
   
@@ -394,7 +409,10 @@ model Event {
   @@index([type])
 }
 
-//Advertsising
+// ============================================
+// ADVERTISING
+// ============================================
+
 model Advertisement {
   id        String   @id @default(cuid())
   title     String
@@ -406,7 +424,6 @@ model Advertisement {
   updatedAt DateTime @updatedAt
 }
 
-
 // ============================================
 // B2B / QUOTE REQUESTS
 // ============================================
@@ -417,12 +434,12 @@ model QuoteRequest {
   
   supplierId      String
   buyerId         String
-  buyer           User     @relation(fields:  [buyerId], references: [id], onDelete: Cascade)
+  buyer           User     @relation(fields: [buyerId], references: [id], onDelete: Cascade)
   
   quantity        Int
   quantityUnit    String
   deliveryRequired Boolean
-  deliveryAddress String?   @db.Text
+  deliveryAddress String?  @db.Text
   notes           String?  @db.Text
   
   status          QuoteStatus @default(PENDING)
@@ -442,33 +459,45 @@ enum QuoteStatus {
 }
 
 // ============================================
-// LOYALTY PROGRAM
+// LOYALTY PROGRAM (IMPROVED) ✨
 // ============================================
 
 model LoyaltyPoints {
-  id          String   @id @default(uuid())
-  userId      String   @unique
-  user        User     @relation(fields: [userId], references: [id], onDelete:  Cascade)
+  id            String   @id @default(uuid())
+  userId        String   @unique
+  user          User     @relation(fields: [userId], references: [id], onDelete:  Cascade)
   
-  points      Int      @default(0)
-  lifetime    Int      @default(0) // Total points ever earned
+  balance       Int      @default(0)         // ← Current available points
+  totalEarned   Int      @default(0)         // ← ADDED:  Total points earned ever
+  totalRedeemed Int      @default(0)         // ← ADDED: Total points used
   
-  updatedAt   DateTime @updatedAt
+  // Legacy fields (keep for compatibility)
+  points        Int      @default(0)         // ← Maps to balance
+  lifetime      Int      @default(0)         // ← Maps to totalEarned
+  
+  createdAt     DateTime @default(now())    // ← ADDED
+  updatedAt     DateTime @updatedAt
+  
+  @@index([userId])
 }
 
 model PointTransaction {
-  id          String   @id @default(uuid())
+  id          String          @id @default(uuid())
   userId      String
+  user        User            @relation(fields:  [userId], references: [id], onDelete: Cascade)  // ← ADDED
   
   type        TransactionType
   points      Int
   description String
   
-  orderId     String?   // If earned from order
+  orderId     String?          // If earned from order
+  order       Order?          @relation(fields: [orderId], references: [id])  // ← ADDED
   
-  createdAt   DateTime @default(now())
+  createdAt   DateTime        @default(now())
   
   @@index([userId])
+  @@index([orderId])  // ← ADDED
+  @@index([createdAt])  // ← ADDED for sorting
 }
 
 enum TransactionType {

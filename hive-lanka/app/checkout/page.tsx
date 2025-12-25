@@ -7,7 +7,8 @@ import Image from 'next/image';
 
 type CartItem = {
   id:  string;
-  name: string;
+  productId: string;
+  name:  string;
   price: number;
   image: string;
   quantity: number;
@@ -19,6 +20,8 @@ export default function CheckoutPage() {
   
   const [cart, setCart] = useState<CartItem[]>([]);
   const [loading, setLoading] = useState(false);
+  const [loyaltyPoints, setLoyaltyPoints] = useState(0);
+  const [pointsToUse, setPointsToUse] = useState(0);
   
   // Form state
   const [fullName, setFullName] = useState('');
@@ -41,7 +44,7 @@ export default function CheckoutPage() {
     // Load cart
     const savedCart = localStorage.getItem('cart');
     if (savedCart) {
-      const parsedCart = JSON.parse(savedCart);
+      const parsedCart = JSON. parse(savedCart);
       if (parsedCart.length === 0) {
         router.push('/cart');
         return;
@@ -54,13 +57,44 @@ export default function CheckoutPage() {
     // Pre-fill user data
     if (user) {
       setFullName(user. fullName || '');
-      setEmail(user.primaryEmailAddress?.emailAddress || '');
+      setEmail(user.primaryEmailAddress?. emailAddress || '');
+      fetchLoyaltyPoints();
     }
   }, [user, isLoaded, router]);
 
+  const fetchLoyaltyPoints = async () => {
+    try {
+      const response = await fetch(`/api/loyalty/balance?clerkId=${user?.id}`);
+      const data = await response. json();
+      setLoyaltyPoints(data.balance || 0);
+    } catch (error) {
+      console.error('Failed to fetch loyalty points:', error);
+    }
+  };
+
   const subtotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
   const shipping = 300;
-  const total = subtotal + shipping;
+  const discount = pointsToUse; // 100 points = LKR 100
+  const total = subtotal + shipping - discount;
+
+  const handleApplyPoints = () => {
+    if (pointsToUse > loyaltyPoints) {
+      alert(`❌ You only have ${loyaltyPoints} points available`);
+      setPointsToUse(0);
+      return;
+    }
+    if (pointsToUse > subtotal) {
+      alert(`❌ Points cannot exceed subtotal amount`);
+      setPointsToUse(Math.min(loyaltyPoints, subtotal));
+      return;
+    }
+    alert(`✅ ${pointsToUse} points applied!  Discount:  LKR ${pointsToUse}`);
+  };
+
+  const handleUseAllPoints = () => {
+    const maxPoints = Math.min(loyaltyPoints, subtotal);
+    setPointsToUse(maxPoints);
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -68,8 +102,8 @@ export default function CheckoutPage() {
 
     try {
       const response = await fetch('/api/orders/create', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        method:  'POST',
+        headers:  { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           clerkId: user?.id,
           items: cart,
@@ -83,15 +117,20 @@ export default function CheckoutPage() {
           },
           paymentMethod,
           notes,
+          subtotal,
+          shipping,
+          discount,
           totalAmount: total,
+          pointsUsed: pointsToUse,
         }),
       });
 
-      const data = await response.json();
+      const data = await response. json();
 
-      if (response.ok) {
+      if (response. ok) {
         // Clear cart
         localStorage.removeItem('cart');
+        window.dispatchEvent(new Event('storage'));
         
         // Redirect to success page
         router.push(`/order-success?orderId=${data.orderId}&orderNumber=${data.orderNumber}&points=${data.pointsEarned}`);
@@ -110,7 +149,7 @@ export default function CheckoutPage() {
     return (
       <main className="checkout-page">
         <div className="container">
-          <p>Loading...</p>
+          <p>Loading... </p>
         </div>
       </main>
     );
@@ -147,7 +186,7 @@ export default function CheckoutPage() {
                     <input 
                       type="tel" 
                       value={phone}
-                      onChange={(e) => setPhone(e.target. value)}
+                      onChange={(e) => setPhone(e.target.value)}
                       placeholder="07XXXXXXXX"
                       required 
                     />
@@ -159,7 +198,7 @@ export default function CheckoutPage() {
                   <input 
                     type="email" 
                     value={email}
-                    onChange={(e) => setEmail(e.target. value)}
+                    onChange={(e) => setEmail(e.target.value)}
                     required 
                   />
                 </div>
@@ -212,7 +251,7 @@ export default function CheckoutPage() {
                     type="text" 
                     value={postalCode}
                     onChange={(e) => setPostalCode(e.target.value)}
-                    placeholder="e.g., 10100"
+                    placeholder="e. g., 10100"
                     required 
                   />
                 </div>
@@ -244,9 +283,9 @@ export default function CheckoutPage() {
                     <input 
                       type="radio" 
                       name="payment" 
-                      value="BANK"
-                      checked={paymentMethod === 'BANK'}
-                      onChange={(e) => setPaymentMethod(e.target. value)}
+                      value="BANK_TRANSFER"
+                      checked={paymentMethod === 'BANK_TRANSFER'}
+                      onChange={(e) => setPaymentMethod(e.target.value)}
                     />
                     <div className="payment-info">
                       <span className="payment-icon">🏦</span>
@@ -263,7 +302,7 @@ export default function CheckoutPage() {
                       name="payment" 
                       value="CARD"
                       checked={paymentMethod === 'CARD'}
-                      onChange={(e) => setPaymentMethod(e.target. value)}
+                      onChange={(e) => setPaymentMethod(e.target.value)}
                     />
                     <div className="payment-info">
                       <span className="payment-icon">💳</span>
@@ -291,15 +330,61 @@ export default function CheckoutPage() {
 
             {/* Right Side - Order Summary */}
             <div className="order-summary-section">
+              
+              {/* 🔥 LOYALTY POINTS CARD */}
+              {loyaltyPoints > 0 && (
+                <div className="loyalty-points-card">
+                  <h2>⭐ Use Loyalty Points</h2>
+                  <p className="points-available">
+                    You have <strong>{loyaltyPoints}</strong> points available
+                  </p>
+                  <p className="points-value">100 points = LKR 100 discount</p>
+
+                  <div className="points-input-group">
+                    <input
+                      type="number"
+                      value={pointsToUse}
+                      onChange={(e) => setPointsToUse(Math.min(Number(e.target.value), loyaltyPoints, subtotal))}
+                      placeholder="Points to use"
+                      min="0"
+                      max={Math.min(loyaltyPoints, subtotal)}
+                      className="points-input"
+                    />
+                    <button
+                      type="button"
+                      onClick={handleApplyPoints}
+                      className="apply-points-btn"
+                    >
+                      Apply
+                    </button>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={handleUseAllPoints}
+                    className="use-all-points-btn"
+                  >
+                    Use All Available Points
+                  </button>
+
+                  {pointsToUse > 0 && (
+                    <div className="points-applied">
+                      ✅ Discount applied:  LKR {pointsToUse. toLocaleString()}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* ORDER SUMMARY */}
               <div className="order-summary-card">
                 <h2>Order Summary</h2>
 
                 <div className="order-items">
                   {cart.map((item) => (
-                    <div key={item.id} className="summary-item">
+                    <div key={item. id} className="summary-item">
                       <div className="summary-item-image">
                         <Image 
-                          src={item. image} 
+                          src={item.image} 
                           alt={item.name} 
                           width={60} 
                           height={60}
@@ -325,6 +410,14 @@ export default function CheckoutPage() {
                     <span>Shipping</span>
                     <span>LKR {shipping.toLocaleString()}</span>
                   </div>
+                  
+                  {discount > 0 && (
+                    <div className="summary-row discount-row">
+                      <span>Points Discount</span>
+                      <span>- LKR {discount.toLocaleString()}</span>
+                    </div>
+                  )}
+
                   <div className="summary-divider"></div>
                   <div className="summary-row total-row">
                     <span>Total</span>
@@ -337,7 +430,7 @@ export default function CheckoutPage() {
                   disabled={loading}
                   className="place-order-btn"
                 >
-                  {loading ? 'Processing...' :  'Place Order 🎉'}
+                  {loading ? 'Processing...' : 'Place Order 🎉'}
                 </button>
 
                 <p className="secure-notice">
