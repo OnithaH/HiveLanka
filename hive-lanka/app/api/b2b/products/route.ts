@@ -6,7 +6,7 @@ export async function GET() {
     const rawProducts = await prisma.product.findMany({
       where: { 
         status: 'ACTIVE',
-        isWholesale: false // 🔥 HIDE WHOLESALE ITEMS
+        isWholesale: true // 🔥 The key filter for B2B
       },
       include: {
         seller: {
@@ -38,7 +38,7 @@ export async function GET() {
     });
 
   } catch (error: any) {
-    console.error('Failed to fetch products:', error);
+    console.error('Failed to fetch B2B products:', error);
     return NextResponse.json(
       { success: false, error: error.message },
       { status: 500 }

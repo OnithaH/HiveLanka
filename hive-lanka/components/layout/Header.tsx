@@ -19,7 +19,7 @@ const translations = {
     events: "Events",
     points: "Points",
     about: "About Us",
-    contact: "Contact",
+    contact: "WholeSale",
     faq: "FAQ",
     searchPlaceholder: "Search...",
     signIn: "Sign In",
@@ -37,7 +37,7 @@ const translations = {
     events: "විශේෂ අවස්ථා",
     points: "ලකුණු",
     about: "අප ගැන",
-    contact: "සම්බන්ධ වන්න",
+    contact: "තොග විකිණීම",
     faq: "ගැටළු සහ පිළිතුරු",
     searchPlaceholder: "සොයන්න...",
     signIn: "පිවිසෙන්න",
@@ -177,13 +177,6 @@ export default function Header() {
                     href="/seller/dashboard"
                   />
                 )}
-                {userRole === 'CUSTOMER' && (
-                  <UserButton.Link
-                    label={t.myDash}
-                    labelIcon={<LayoutDashboard size={16} />}
-                    href="/dashboard"
-                  />
-                )}
                 
                 <UserButton.Link
                   label={t.myOrders}
@@ -216,8 +209,8 @@ export default function Header() {
           <Link href="/tutorials"><button className="nav-button">{t.tutorials}</button></Link>
           <Link href="/events"><button className="nav-button">{t.events}</button></Link>
           <Link href="/loyalty"><button className="nav-button">{t.points}</button></Link>
+          <Link href="/b2b"><button className="nav-button">{t.contact}</button></Link>
           <Link href="/about"><button className="nav-button">{t.about}</button></Link>
-          <Link href="/contact"><button className="nav-button">{t.contact}</button></Link>
           <Link href="/faq"><button className="nav-button">{t.faq}</button></Link>
         </div>
       </div>

@@ -26,8 +26,11 @@ export default async function HomePage() {
   let products: ProductWithSeller[] = [];
 
   try {
-    const rawProducts = await prisma.product. findMany({
-      where: { status: 'ACTIVE' },
+    const rawProducts = await prisma.product.findMany({
+      where: { 
+        status: 'ACTIVE',
+        isWholesale: false // 🔥 HIDE WHOLESALE ITEMS
+      },
       include: {
         seller: {
           select: {
@@ -47,7 +50,7 @@ export default async function HomePage() {
       images: p.images,
       category: p.category,
       seller: {
-        businessName: p.seller. businessName,
+        businessName: p.seller.businessName,
         verified: p.seller.verified,
       },
     }));
@@ -80,7 +83,7 @@ export default async function HomePage() {
 
           {/* Products Grid */}
           <div className="products-showcase-grid">
-            {products. length > 0 ? (
+            {products.length > 0 ? (
               products.map((product) => (
                 <ProductCard key={product.id} product={product} />
               ))
