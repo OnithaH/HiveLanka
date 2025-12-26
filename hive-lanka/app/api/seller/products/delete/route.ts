@@ -7,13 +7,13 @@ export async function POST(request: NextRequest) {
 
     await prisma.product.update({
       where: { id: productId },
-      data: { status:  'DELETED' },
+      data: { status: 'DELETED' },
     });
 
     return NextResponse.json({ success: true });
 
   } catch (error: any) {
     console.error('Delete product error:', error);
-    return NextResponse.json({ error: error. message }, { status: 500 });
+    return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }

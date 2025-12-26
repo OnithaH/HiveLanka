@@ -5,6 +5,7 @@ import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import "./globals.css";
 import AIChatBot from '@/components/AIChatBot';
+import { LanguageProvider } from '@/lib/LanguageContext';
 
 const inter = Inter({ subsets:  ['latin'] });
 
@@ -22,10 +23,12 @@ export default function RootLayout({
     <ClerkProvider>
       <html lang="en">
         <body className={inter.className}>
-          <Header />
-          {children}
-          <Footer />
-          <AIChatBot />
+          <LanguageProvider>
+            <Header />
+            {children}
+            <Footer />
+            <AIChatBot />
+          </LanguageProvider>
         </body>
       </html>
     </ClerkProvider>

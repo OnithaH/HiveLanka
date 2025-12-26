@@ -18,7 +18,7 @@ export default function ManageProductsPage() {
 
   const fetchProducts = async () => {
     try {
-      const response = await fetch(`/api/seller/products? clerkId=${user?.id}`);
+      const response = await fetch(`/api/seller/products?clerkId=${user?.id}`);
       const data = await response.json();
       setProducts(data.products || []);
     } catch (error) {
@@ -29,7 +29,7 @@ export default function ManageProductsPage() {
   };
 
   const deleteProduct = async (productId: string) => {
-    if (! confirm('Are you sure you want to delete this product?')) return;
+    if (!confirm('Are you sure you want to delete this product?')) return;
 
     try {
       const response = await fetch('/api/seller/products/delete', {
@@ -39,7 +39,7 @@ export default function ManageProductsPage() {
       });
 
       if (response.ok) {
-        alert('✅ Product deleted! ');
+        alert('✅ Product deleted!');
         fetchProducts();
       } else {
         alert('❌ Failed to delete');
@@ -61,7 +61,7 @@ export default function ManageProductsPage() {
       });
 
       if (response.ok) {
-        alert(`✅ Product ${newStatus. toLowerCase()}!`);
+        alert(`✅ Product ${newStatus.toLowerCase()}!`);
         fetchProducts();
       }
     } catch (error) {
@@ -71,7 +71,7 @@ export default function ManageProductsPage() {
 
   if (loading) {
     return (
-      <div style={{ padding:  '60px 20px', textAlign: 'center' }}>
+      <div style={{ padding: '60px 20px', textAlign: 'center' }}>
         <p>Loading your products...</p>
       </div>
     );
@@ -84,7 +84,7 @@ export default function ManageProductsPage() {
           <h1 style={{ fontSize: '2.5rem', marginBottom: '10px', color: '#2E7D32' }}>My Products</h1>
           <p style={{ color: '#666' }}>Manage your product listings</p>
         </div>
-        <Link href="/seller/add-product">
+        <Link href="/seller/products/new">
           <button style={{
             background: '#4CAF50',
             color: 'white',
@@ -100,7 +100,7 @@ export default function ManageProductsPage() {
         </Link>
       </div>
 
-      {products.length === 0 ?  (
+      {products.length === 0 ? (
         <div style={{
           textAlign: 'center',
           padding: '60px',
@@ -108,10 +108,10 @@ export default function ManageProductsPage() {
           borderRadius: '15px',
           boxShadow: '0 5px 15px rgba(0,0,0,0.1)'
         }}>
-          <div style={{ fontSize: '4rem', marginBottom:  '20px' }}>📦</div>
+          <div style={{ fontSize: '4rem', marginBottom: '20px' }}>📦</div>
           <h2>No products yet</h2>
-          <p style={{ color:  '#666', marginBottom: '30px' }}>Add your first product to start selling!</p>
-          <Link href="/seller/add-product">
+          <p style={{ color: '#666', marginBottom: '30px' }}>Add your first product to start selling!</p>
+          <Link href="/seller/products/new">
             <button style={{
               background: '#4CAF50',
               color: 'white',
@@ -142,9 +142,9 @@ export default function ManageProductsPage() {
                   top: '10px',
                   left: '10px',
                   background: '#F44336',
-                  color:  'white',
+                  color: 'white',
                   padding: '5px 15px',
-                  borderRadius:  '20px',
+                  borderRadius: '20px',
                   fontSize: '0.8rem',
                   fontWeight: '600',
                   zIndex: 10
@@ -163,8 +163,8 @@ export default function ManageProductsPage() {
 
               <div style={{ padding: '20px' }}>
                 <h3 style={{ fontSize: '1.2rem', marginBottom: '10px' }}>{product.name}</h3>
-                <p style={{ color: '#666', fontSize:  '0.9rem', marginBottom: '10px', height: '40px', overflow: 'hidden' }}>
-                  {product. description}
+                <p style={{ color: '#666', fontSize: '0.9rem', marginBottom: '10px', height: '40px', overflow: 'hidden' }}>
+                  {product.description}
                 </p>
                 <p style={{ fontSize: '1.5rem', fontWeight: '700', color: '#2E7D32', marginBottom: '10px' }}>
                   LKR {Number(product.price).toLocaleString()}
@@ -174,11 +174,11 @@ export default function ManageProductsPage() {
                 </p>
 
                 <div style={{ display: 'flex', gap: '10px', marginTop: '20px' }}>
-                  <Link href={`/seller/edit-product/${product.id}`} style={{ flex: 1 }}>
+                  <Link href={`/seller/products/edit/${product.id}`} style={{ flex: 1 }}>
                     <button style={{
                       width: '100%',
                       background: '#2196F3',
-                      color:  'white',
+                      color: 'white',
                       border: 'none',
                       padding: '10px',
                       borderRadius: '8px',
@@ -190,12 +190,12 @@ export default function ManageProductsPage() {
                   </Link>
 
                   <button
-                    onClick={() => toggleStatus(product.id, product. status)}
+                    onClick={() => toggleStatus(product.id, product.status)}
                     style={{
                       flex: 1,
                       background: product.status === 'ACTIVE' ? '#FF9800' : '#4CAF50',
                       color: 'white',
-                      border:  'none',
+                      border: 'none',
                       padding: '10px',
                       borderRadius: '8px',
                       cursor: 'pointer',
@@ -212,7 +212,7 @@ export default function ManageProductsPage() {
                       color: 'white',
                       border: 'none',
                       padding: '10px 15px',
-                      borderRadius:  '8px',
+                      borderRadius: '8px',
                       cursor: 'pointer',
                       fontWeight: '600'
                     }}

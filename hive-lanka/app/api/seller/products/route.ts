@@ -1,38 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 
-export async function GET(request: NextRequest) {
+export async function POST(request: NextRequest) {
   try {
-    const { searchParams } = new URL(request.url);
-    const clerkId = searchParams.get('clerkId');
+    const { productId, status } = await request.json();
 
-    if (!clerkId) {
-      return NextResponse.json({ error: 'Missing clerkId' }, { status: 400 });
-    }
-
-    const user = await prisma.user.findUnique({
-      where: { clerkId },
+    await prisma.product.update({
+      where: { id: productId },
+      data: { status },
     });
 
-    if (!user) {
-      return NextResponse.json({ error: 'User not found' }, { status: 404 });
-    }
-
-    const products = await prisma.product.findMany({
-      where: { 
-        sellerId: user.id,
-        status: { not: 'DELETED' }
-      },
-      orderBy: { createdAt: 'desc' },
-    });
-
-    return NextResponse.json({
-      success: true,
-      products,
-    });
+    return NextResponse.json({ success: true });
 
   } catch (error: any) {
-    console.error('Fetch products error:', error);
+    console.error('Toggle product error:', error);
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }
