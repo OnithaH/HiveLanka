@@ -20,7 +20,7 @@ export async function POST(request: NextRequest) {
         phone,
         location,
         district,
-        ...(role === 'SELLER' && { businessName, businessType, verified: true }),
+        ...(role === 'SELLER' && { businessName, businessType, verified: false }),
       },
     });
 

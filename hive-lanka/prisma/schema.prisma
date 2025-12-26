@@ -20,6 +20,7 @@ model User {
   role          UserRole  @default(CUSTOMER)
   verified      Boolean   @default(false)
   
+  verificationStatus String @default("NONE")
   // Profile
   avatar        String?
   location      String? 
@@ -496,8 +497,8 @@ model PointTransaction {
   createdAt   DateTime        @default(now())
   
   @@index([userId])
-  @@index([orderId])  // ← ADDED
-  @@index([createdAt])  // ← ADDED for sorting
+  @@index([orderId])  
+  @@index([createdAt])  
 }
 
 enum TransactionType {
