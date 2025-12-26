@@ -167,7 +167,7 @@ export default function Header() {
                   <UserButton.Link
                     label={t.adminDash}
                     labelIcon={<Shield size={16} />}
-                    href="/admin"
+                    href="/admin/dashboard"
                   />
                 )}
                 {userRole === 'SELLER' && (

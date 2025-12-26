@@ -123,7 +123,7 @@ export default function SellerOrdersPage() {
                   <div key={item.id} style={{ display: 'flex', gap: '15px', marginBottom: '15px', alignItems: 'center' }}>
                     <Image 
                       src={item.product?.images[0] || '/images/placeholder.jpg'} 
-                      alt={item.product?.name || 'Product'} 
+                      alt={item.product?.name} 
                       width={60} height={60} 
                       style={{ borderRadius: '8px', objectFit: 'cover' }} 
                     />
