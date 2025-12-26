@@ -11,26 +11,24 @@ const isPublicRoute = createRouteMatcher([
   '/faq(.*)',
   '/signin(.*)',
   '/signup(.*)',
-  '/signin-redirect',  
-  '/visual-search(.*)',  
+  '/signin-redirect',
+  '/visual-search(.*)',
   '/api/webhooks/(.*)',
   '/api/loyalty/(.*)',
   '/api/test(.*)',
   '/api/user/(.*)',
   '/api/orders/(.*)',
   '/api/products/(.*)',
-  '/api/visual-search/(.*)',  
+  '/api/visual-search/(.*)',
 ]);
 
 const isAdminRoute = createRouteMatcher(['/admin(.*)']);
 
 export default clerkMiddleware(async (auth, request) => {
-  // Protect admin routes (requires login)
   if (isAdminRoute(request)) {
     await auth.protect();
   }
   
-  // Protect all other non-public routes
   if (!isPublicRoute(request)) {
     await auth.protect();
   }
@@ -38,7 +36,7 @@ export default clerkMiddleware(async (auth, request) => {
 
 export const config = {
   matcher: [
-    '/((?!_next|[^? ]*\\.(?:html?|css|js(?!on)|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|csv|docx?|xlsx?|zip|webmanifest)).*)',
+    '/((?!_next|[^?]*\\.(?:html?|css|js(?!on)|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|csv|docx?|xlsx?|zip|webmanifest)).*)',
     '/(api|trpc)(.*)',
   ],
 };
