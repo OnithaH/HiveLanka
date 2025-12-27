@@ -9,35 +9,51 @@ export default function SubmitEvent() {
   const [dbUserId, setDbUserId] = useState<string | null>(null);
   const [formData, setFormData] = useState({ eventName: '', date: '', description: '', venue: '', location: '' });
 
-  // Fetch your internal database ID first
+  // 1. Fetch internal DB ID correctly
   useEffect(() => {
     if (user) {
       fetch(`/api/user/role?clerkId=${user.id}`)
         .then(res => res.json())
-        .then(data => setDbUserId(data.user?.id));
+        .then(data => {
+          // 🔥 CRITICAL FIX: The API returns 'userId', NOT 'user.id'
+          if (data.userId) {
+            setDbUserId(data.userId);
+          } else {
+            console.error("User ID missing in response:", data);
+          }
+        })
+        .catch(err => console.error("Error fetching role:", err));
     }
   }, [user]);
 
   const handleSubmit = async (e: any) => {
     e.preventDefault();
+    
+    // This will now pass because dbUserId is correctly set
     if (!dbUserId) return alert("User data not synced. Please try again.");
 
-    const res = await fetch('/api/events/submit', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ 
-        ...formData, 
-        submittedBy: dbUserId, // Use internal ID, not Clerk ID
-        contactEmail: user?.primaryEmailAddress?.emailAddress 
-      })
-    });
+    try {
+      const res = await fetch('/api/events/submit', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          ...formData, 
+          submittedBy: dbUserId, 
+          contactEmail: user?.primaryEmailAddress?.emailAddress 
+        })
+      });
 
-    if (res.ok) {
-      alert("✅ Proposal sent! Admin will publish once the poster is ready.");
-      router.push('/events');
-    } else {
-      const err = await res.json();
-      alert(`Error: ${err.error}`);
+      const json = await res.json();
+
+      if (res.ok) {
+        alert("✅ Proposal sent! Admin will publish once the poster is ready.");
+        router.push('/events'); // Redirect to main event page
+      } else {
+        alert(`Error: ${json.error || 'Submission failed'}`);
+      }
+    } catch (error) {
+      alert("Network error. Check console.");
+      console.error(error);
     }
   };
 

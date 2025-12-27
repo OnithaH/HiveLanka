@@ -1,43 +1,34 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 
-// Handles: GET /api/submissions (Used by Admin to see list)
-export async function GET() {
-  try {
-    const submissions = await prisma.eventSubmission.findMany({
-      where: { status: 'PENDING' },
-      orderBy: { createdAt: 'desc' }
-    });
-    return NextResponse.json({ success: true, submissions });
-  } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
-  }
-}
-
-// Handles: POST /api/submissions (Used by Sellers to submit form)
-export async function POST(req: Request) {
+export async function POST(req: NextRequest) {
   try {
     const data = await req.json();
-    
-    // Logic to create submission in DB
-    const newSubmission = await prisma.eventSubmission.create({
+
+    // Validate required fields
+    if (!data.submittedBy || !data.eventName) {
+      return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
+    }
+
+    const submission = await prisma.eventSubmission.create({
       data: {
         eventName: data.eventName,
         date: new Date(data.date),
         description: data.description,
-        venue: data.venue,
-        location: data.location,
-        time: data.time || "TBD",
-        contactPhone: data.contactPhone,
+        venue: data.venue || "TBD",
+        location: data.location || "Sri Lanka",
+        time: "TBD",
+        contactPhone: "N/A",
         contactEmail: data.contactEmail,
-        eventType: data.eventType,
-        submittedBy: data.submittedBy,
+        eventType: "EXHIBITION",
+        submittedBy: data.submittedBy, // Must be the internal User ID
         status: "PENDING"
       }
     });
 
-    return NextResponse.json({ success: true, submission: newSubmission });
+    return NextResponse.json({ success: true, submission });
   } catch (error: any) {
+    console.error("Submission Error:", error);
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }
