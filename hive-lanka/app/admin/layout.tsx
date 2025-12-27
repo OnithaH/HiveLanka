@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { LayoutDashboard, Package, Users, Settings, LogOut, ShieldAlert } from 'lucide-react';
+import { LayoutDashboard, Package, Users, Settings, LogOut, ShieldAlert, CalendarCheck } from 'lucide-react';
 import { usePathname } from 'next/navigation';
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
@@ -32,10 +32,10 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           </Link>
 
           <Link
-            href="/admin/settings"
-            className={`admin-nav-item ${pathname.includes('/settings') ? 'active' : ''}`}
+            href="/admin/events"
+            className={`admin-nav-item ${pathname.includes('/events') ? 'active' : ''}`}
           >
-            <Settings size={20} /> Settings
+            <CalendarCheck size={20} /> Event Submissions
           </Link>
         </nav>
 

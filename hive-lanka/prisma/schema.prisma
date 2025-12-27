@@ -1,10 +1,6 @@
 generator client {
   provider = "prisma-client-js"
 }
-generator uml {
-  provider = "prisma-uml"
-  output   = "./uml"
-}
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
@@ -356,6 +352,7 @@ model EventSubmission {
   referenceImages String[] // Images uploaded by submitter
   
   status          SubmissionStatus @default(PENDING)
+  createdAt       DateTime @default(now())
   adminNotes      String?  @db.Text
   
   submittedAt     DateTime @default(now())
