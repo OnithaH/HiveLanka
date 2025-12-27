@@ -3,7 +3,7 @@ export const TUTORIALS = [
     id: 1,
     title: "How to Add Your First Product",
     category: "Getting Started",
-    thumbnail: "https://img.youtube.com/vi/dQw4w9WgXcQ/mqdefault.jpg", // Replace with real ID if you have one
+    thumbnail: "https://img.youtube.com/vi/dQw4w9WgXcQ/mqdefault.jpg", 
     videoUrl: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
     duration: "2:15"
   },

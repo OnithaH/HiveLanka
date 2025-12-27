@@ -52,9 +52,9 @@ export default function AdminEventSubmissions() {
                   </span>
                 </div>
 
-                <Link href={`/admin/events/publish/${sub.id}`} className="hev-btn" style={{width: '100%', display: 'block', background: '#667eea'}}>
-                  REVIEW & DESIGN POSTER
-                </Link>
+<Link href={`/admin/events/publish/${sub.id}`} className="hev-btn" style={{width: '100%', display: 'block', background: '#667eea'}}>
+  REVIEW & DESIGN POSTER
+</Link>
               </div>
             </div>
           ))
