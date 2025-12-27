@@ -204,7 +204,7 @@ export default function Header() {
         <div className="nav-buttons">
           <Link href="/"><button className="nav-button">{t.home}</button></Link>
           <Link href="/shop"><button className="nav-button">{t.shop}</button></Link>
-          <Link href="/donate"><button className="nav-button">{t.donate}</button></Link>
+          <Link href="/fundraising"><button className="nav-button">{t.donate}</button></Link>
           <Link href="/forum"><button className="nav-button">{t.community}</button></Link>
           <Link href="/tutorials"><button className="nav-button">{t.tutorials}</button></Link>
           <Link href="/events"><button className="nav-button">{t.events}</button></Link>
