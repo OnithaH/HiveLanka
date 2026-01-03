@@ -106,6 +106,10 @@ export default function SellerDashboard() {
             <Link href="/fundraising/new" className="hsh-btn" style={{backgroundColor: '#7c3aed', color: 'white'}}>
               <HeartHandshake size={18}/> Start Fundraiser
             </Link>
+
+            <Link href="/seller/products" className="hsh-btn" style={{backgroundColor: '#30893eff', color: 'white'}}>
+              <HeartHandshake size={18}/> Manage Products
+            </Link>
           </div>
         </div>
 

@@ -3,6 +3,7 @@ import { prisma } from '@/lib/prisma';
 import Image from 'next/image';
 import Link from 'next/link';
 import AddToCartButton from '@/components/product/AddToCartButton';
+import '@/app/product/product-details.css';
 
 export default async function ProductDetailPage({ 
   params 
