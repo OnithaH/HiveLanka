@@ -22,7 +22,7 @@ export async function POST(request: NextRequest) {
       Also provide a 1 sentence translation of that advice in Sinhala.
     `;
 
-    // 🔥 FIXED: Using 'fetch' and 'gemini-1.5-flash' (faster/cheaper than pro)
+    // Using 'fetch' and 'gemini-1.5-flash' (faster/cheaper than pro)
     const response = await fetch(
       `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`,
       {

@@ -12,49 +12,48 @@ export async function POST(request: NextRequest) {
 
     console.log('📤 Uploading file:', file.name);
 
-    // Get Azure credentials from environment
+    // 1. Get Azure credentials
     const connectionString = process.env.AZURE_STORAGE_CONNECTION_STRING;
-    const containerName = process. env.AZURE_STORAGE_CONTAINER_NAME || 'product-images';
+    
+    // 🔥 FIX: Removed the space in 'process. env' and set the correct default container
+    const containerName = process.env.AZURE_STORAGE_CONTAINER_NAME || 'hive-lanka-products';
 
     if (!connectionString) {
       return NextResponse.json({ error: 'Azure storage not configured' }, { status: 500 });
     }
 
-    // Create blob service client
+    // 2. Connect to Container
     const blobServiceClient = BlobServiceClient.fromConnectionString(connectionString);
     const containerClient = blobServiceClient.getContainerClient(containerName);
 
-    // Create unique filename
+    // 3. Create unique filename
     const timestamp = Date.now();
     const randomString = Math.random().toString(36).substring(7);
     const fileExtension = file.name.split('.').pop();
-    const blobName = `product-${timestamp}-${randomString}.${fileExtension}`;
+    // Renamed prefix to 'upload-' so it works for both Products and Event Posters
+    const blobName = `upload-${timestamp}-${randomString}.${fileExtension}`;
 
-    // Get blob client
+    // 4. Upload Logic
     const blockBlobClient = containerClient.getBlockBlobClient(blobName);
-
-    // Convert file to buffer
     const arrayBuffer = await file.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
 
-    // Upload to Azure
     await blockBlobClient.uploadData(buffer, {
       blobHTTPHeaders: {
         blobContentType: file.type,
       },
     });
 
-    // Get public URL
+    // 5. Get and Return Public URL
     const imageUrl = blockBlobClient.url;
-
     console.log('✅ Upload successful:', imageUrl);
 
     return NextResponse.json({
       success: true,
-      url: imageUrl,
+      url: imageUrl, // The admin page listens for this 'url' key
     });
 
-  } catch (error:  any) {
+  } catch (error: any) {
     console.error('❌ Upload error:', error);
     return NextResponse.json({ error: error.message }, { status: 500 });
   }

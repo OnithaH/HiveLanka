@@ -8,7 +8,12 @@ export async function GET(
   try {
     const { id } = await params;
     const submission = await prisma.eventSubmission.findUnique({
-      where: { id }
+      where: { id },
+      include: {
+        submitter: {
+          select: { name: true, email: true }
+        }
+      }
     });
 
     if (!submission) return NextResponse.json({ error: "Not found" }, { status: 404 });
