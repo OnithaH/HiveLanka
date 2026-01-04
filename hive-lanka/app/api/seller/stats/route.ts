@@ -18,7 +18,6 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 });
     }
 
-    // 1. Count Total Products
     const totalProducts = await prisma.product.count({
       where: { 
         sellerId: user.id,
@@ -26,22 +25,16 @@ export async function GET(request: NextRequest) {
       }
     });
 
-    // 2. Count Total Orders
     const totalOrders = await prisma.order.count({
       where: { sellerId: user.id }
     });
 
-    // 3. Calculate Total Revenue
     const revenueResult = await prisma.order.aggregate({
       where: { sellerId: user.id },
-      _sum: {
-        total: true
-      }
+      _sum: { total: true }
     });
     const totalRevenue = revenueResult._sum.total || 0;
 
-    // 4. Get Top Selling Product (Simple logic: just one recent order item for demo)
-    // In a real app, you would group by productId and count
     const lastOrder = await prisma.order.findFirst({
       where: { sellerId: user.id },
       include: { items: { include: { product: true } } },
@@ -49,11 +42,18 @@ export async function GET(request: NextRequest) {
     });
     const topProduct = lastOrder?.items[0]?.product?.name || "None yet";
 
+    // 🔥 FIX: Return with success: true so the dashboard frontend processes it
     return NextResponse.json({
-      totalProducts,
-      totalOrders,
-      totalRevenue: Number(totalRevenue),
-      topProduct
+      success: true,
+      stats: {
+        totalProducts,
+        totalOrders,
+        totalRevenue: Number(totalRevenue),
+        topProduct,
+        revenue: Number(totalRevenue), 
+        products: totalProducts,       
+        orders: totalOrders            
+      }
     });
 
   } catch (error: any) {

@@ -6,8 +6,6 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const { clerkId, cart, deliveryInfo, subtotal, deliveryFee, discount, total, pointsUsed } = body;
 
-    console.log('📦 Processing Order:', { clerkId, itemsCount: cart?.length });
-
     if (!clerkId || !cart || cart.length === 0) {
       return NextResponse.json({ error: 'Invalid order data' }, { status: 400 });
     }
@@ -17,7 +15,6 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 });
     }
 
-    // Get seller from first product (Frontend now sends 'productId')
     const firstProduct = await prisma.product.findUnique({
       where: { id: cart[0].productId }, 
       select: { sellerId: true }
@@ -29,7 +26,6 @@ export async function POST(request: NextRequest) {
 
     const orderNumber = `ORD-${Date.now()}`;
 
-    // Transaction: Order + Loyalty
     const result = await prisma.$transaction(async (tx) => {
       // 1. Create Order
       const order = await tx.order.create({
@@ -57,6 +53,17 @@ export async function POST(request: NextRequest) {
           },
         },
       });
+
+      // 🔥 FIX: Loop through cart and reduce stock in database
+      for (const item of cart) {
+        await tx.product.update({
+          where: { id: item.productId },
+          data: {
+            stockQuantity: { decrement: item.quantity },
+            sold: { increment: item.quantity }
+          }
+        });
+      }
 
       // 2. Deduct Points
       if (pointsUsed > 0) {
