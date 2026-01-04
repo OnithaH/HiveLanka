@@ -1,7 +1,10 @@
 'use client';
 import { useEffect, useState, use } from 'react';
 import { useRouter } from 'next/navigation';
-import { Image as ImageIcon, ArrowLeft, Upload, User, MapPin, Calendar, AlignLeft, CheckCircle } from 'lucide-react';
+import { 
+  Image as ImageIcon, ArrowLeft, Upload, User, 
+  MapPin, Calendar, AlignLeft, CheckCircle, Clock 
+} from 'lucide-react';
 
 export default function AdminPublishEvent({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
@@ -34,136 +37,163 @@ export default function AdminPublishEvent({ params }: { params: Promise<{ id: st
     setLoading(true);
 
     try {
-      // 1. Upload to Azure Blob Storage
       const formData = new FormData();
       formData.append('file', file);
       
-      const uploadRes = await fetch('/api/upload', {
-        method: 'POST',
-        body: formData,
-      });
+      // Upload to Azure
+      const uploadRes = await fetch('/api/upload', { method: 'POST', body: formData });
       const uploadData = await uploadRes.json();
       
-      if (!uploadRes.ok) throw new Error("Upload failed");
+      if (!uploadRes.ok) throw new Error("Azure upload failed: " + uploadData.error);
 
-      // 2. Publish Event with the Azure URL
+      // Publish Event
       const res = await fetch('/api/admin/events/publish', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           ...submission,
           submissionId: submission.id,
-          posterImage: uploadData.url // The Azure Blob URL
+          posterImage: uploadData.url
         })
       });
 
       if (res.ok) {
-        alert("🚀 Event Live on Board!");
+        alert("🚀 Event Published Successfully!");
         router.push('/admin/events');
       }
-    } catch (err) {
-      alert("Error: " + err);
+    } catch (err: any) {
+      alert("Error: " + err.message);
     } finally {
       setLoading(false);
     }
   };
 
-  if (!submission) return (
-    <div className="flex items-center justify-center min-h-screen">
-      <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
-    </div>
-  );
+  if (!submission) return <div style={{padding: '50px', textAlign: 'center', fontWeight: 'bold'}}>LOADING...</div>;
 
   return (
-    <div className="hev-board-wrapper" style={{ backgroundColor: '#f8fafc', minHeight: '100vh', padding: '40px 20px' }}>
-      <div className="max-w-5xl mx-auto">
-        <button onClick={() => router.back()} className="flex items-center gap-2 text-slate-500 font-bold mb-6 hover:text-blue-600 transition-colors">
-          <ArrowLeft size={20} /> Back to Submissions
+    <div style={{ minHeight: '100vh', background: '#f8fafc', padding: '40px' }}>
+      <div style={{ maxWidth: '1100px', margin: '0 auto' }}>
+        
+        {/* Back Button */}
+        <button onClick={() => router.back()} style={{ display: 'flex', alignItems: 'center', gap: '10px', color: '#64748b', fontWeight: 'bold', marginBottom: '30px', background: 'none', border: 'none', cursor: 'pointer' }}>
+          <ArrowLeft size={20} /> BACK TO SUBMISSIONS
         </button>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '40px' }}>
+          
           {/* LEFT: Submission Details */}
-          <div className="bg-white p-8 rounded-3xl border shadow-sm">
-            <h2 className="text-2xl font-black mb-6 flex items-center gap-2">
-              <AlignLeft className="text-blue-600" /> Proposal Details
+          <div style={{ background: 'white', padding: '40px', borderRadius: '30px', border: '1px solid #e2e8f0', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)' }}>
+            <h2 style={{ fontSize: '24px', fontWeight: '900', marginBottom: '30px', display: 'flex', alignItems: 'center', gap: '10px', color: '#0f172a' }}>
+              <AlignLeft color="#2563eb" /> Event Details
             </h2>
             
-            <div className="space-y-6">
-              <DetailBox label="Event Name" value={submission.eventName} icon={<CheckCircle size={16}/>} />
-              <div className="grid grid-cols-2 gap-4">
-                <DetailBox label="Proposed By" value={submission.submitter?.name || "Unknown User"} icon={<User size={16}/>} />
-                <DetailBox label="Date" value={new Date(submission.date).toDateString()} icon={<Calendar size={16}/>} />
-              </div>
-              <DetailBox label="Venue" value={submission.venue} icon={<MapPin size={16}/>} />
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '25px' }}>
+              <DetailBox label="Event Title" value={submission.eventName} icon={<CheckCircle size={18} color="#3b82f6" />} />
               
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+                <DetailBox label="Proposed By" value={submission.submitter?.name || "User"} icon={<User size={18} color="#3b82f6" />} />
+                <DetailBox label="Date" value={new Date(submission.date).toDateString()} icon={<Calendar size={18} color="#3b82f6" />} />
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+                <DetailBox label="Venue" value={submission.venue} icon={<MapPin size={18} color="#3b82f6" />} />
+                <DetailBox label="Time" value={submission.time} icon={<Clock size={18} color="#3b82f6" />} />
+              </div>
+
               <div>
-                <label className="text-xs font-bold text-slate-400 uppercase block mb-2">Description</label>
-                <div className="p-4 bg-slate-50 rounded-2xl text-slate-700 text-sm leading-relaxed border border-slate-100">
-                  {submission.description}
+                <label style={{ fontSize: '11px', fontWeight: '800', color: '#94a3b8', textTransform: 'uppercase', display: 'block', marginBottom: '8px' }}>Full Description</label>
+                <div style={{ padding: '20px', background: '#f1f5f9', borderRadius: '20px', color: '#475569', fontSize: '14px', lineHeight: '1.6' }}>
+                  "{submission.description}"
                 </div>
               </div>
             </div>
           </div>
 
-          {/* RIGHT: Poster Design & Upload */}
-          <div className="bg-white p-8 rounded-3xl border shadow-sm flex flex-col">
-            <h2 className="text-2xl font-black mb-6 flex items-center gap-2">
-              <ImageIcon className="text-green-600" /> Official Poster
+          {/* RIGHT: Design Upload (FIXED CLICK) */}
+          <div style={{ background: 'white', padding: '40px', borderRadius: '30px', border: '1px solid #e2e8f0', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)', display: 'flex', flexDirection: 'column' }}>
+            <h2 style={{ fontSize: '24px', fontWeight: '900', marginBottom: '30px', display: 'flex', alignItems: 'center', gap: '10px', color: '#0f172a' }}>
+              <ImageIcon color="#16a34a" /> Poster Upload
             </h2>
 
-            <form onSubmit={handlePublish} className="flex-1 flex flex-col">
-              <div 
-                className={`relative flex-1 border-2 border-dashed rounded-3xl flex flex-col items-center justify-center p-6 transition-all ${previewUrl ? 'border-green-500 bg-green-50' : 'border-slate-200 bg-slate-50'}`}
-                style={{ minHeight: '300px' }}
+            <form onSubmit={handlePublish} style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+              {/* THE CLICKABLE AREA */}
+              <label 
+                style={{ 
+                  flex: 1, 
+                  minHeight: '350px', 
+                  border: previewUrl ? '3px solid #4ade80' : '3px dashed #cbd5e1', 
+                  borderRadius: '24px', 
+                  background: previewUrl ? '#f0fdf4' : '#f8fafc',
+                  display: 'flex', 
+                  flexDirection: 'column', 
+                  alignItems: 'center', 
+                  justifyContent: 'center', 
+                  cursor: 'pointer',
+                  position: 'relative',
+                  overflow: 'hidden'
+                }}
               >
+                {/* This input is hidden but triggered by the label click */}
+                <input 
+                  type="file" 
+                  accept="image/*" 
+                  onChange={handleFileChange} 
+                  style={{ display: 'none' }} 
+                />
+
                 {previewUrl ? (
-                  <div className="w-full h-full relative">
-                    <img src={previewUrl} alt="Preview" className="w-full h-64 object-contain rounded-xl" />
-                    <button 
-                      type="button"
-                      onClick={() => {setFile(null); setPreviewUrl(null);}}
-                      className="absolute top-2 right-2 bg-red-500 text-white p-2 rounded-full shadow-lg"
-                    >
-                      ✕
-                    </button>
-                  </div>
+                  <img src={previewUrl} alt="Preview" style={{ width: '100%', height: '100%', objectFit: 'contain', padding: '10px' }} />
                 ) : (
                   <>
-                    <Upload size={48} className="text-slate-300 mb-4" />
-                    <p className="text-slate-500 font-bold text-center">Upload Designed JPG/PNG</p>
-                    <p className="text-slate-400 text-xs mt-1">Maximum size 5MB</p>
-                    <input 
-                      type="file" 
-                      accept="image/*" 
-                      onChange={handleFileChange}
-                      className="absolute inset-0 opacity-0 cursor-pointer"
-                    />
+                    <div style={{ width: '80px', height: '80px', background: 'white', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '20px', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)' }}>
+                      <Upload size={32} color="#cbd5e1" />
+                    </div>
+                    <p style={{ color: '#64748b', fontWeight: 'bold' }}>Click to Upload Design</p>
+                    <p style={{ color: '#94a3b8', fontSize: '12px', marginTop: '5px' }}>PNG, JPG up to 5MB</p>
                   </>
                 )}
-              </div>
+              </label>
+
+              {previewUrl && (
+                <button type="button" onClick={() => {setFile(null); setPreviewUrl(null);}} style={{ marginTop: '10px', color: '#ef4444', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 'bold', fontSize: '14px' }}>
+                  Remove Image ✕
+                </button>
+              )}
 
               <button 
                 type="submit" 
                 disabled={loading || !file}
-                className={`w-full mt-6 p-5 rounded-2xl font-black text-lg shadow-lg transform transition-all active:scale-95 ${loading ? 'bg-slate-400' : 'bg-green-600 hover:bg-green-700 text-white'}`}
+                style={{ 
+                  width: '100%', 
+                  marginTop: '30px', 
+                  padding: '20px', 
+                  borderRadius: '16px', 
+                  background: loading ? '#cbd5e1' : '#1e293b', 
+                  color: 'white', 
+                  fontWeight: '900', 
+                  fontSize: '16px', 
+                  border: 'none', 
+                  cursor: loading || !file ? 'not-allowed' : 'pointer',
+                  boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)'
+                }}
               >
-                {loading ? "PROCESSING..." : "APPROVE & PUBLISH LIVE"}
+                {loading ? "UPLOADING TO AZURE..." : "APPROVE & GO LIVE"}
               </button>
             </form>
           </div>
+
         </div>
       </div>
     </div>
   );
 }
 
-function DetailBox({ label, value, icon }: { label: string, value: string, icon: React.ReactNode }) {
+function DetailBox({ label, value, icon }: { label: string, value: string, icon: any }) {
   return (
     <div>
-      <label className="text-xs font-bold text-slate-400 uppercase block mb-1">{label}</label>
-      <div className="flex items-center gap-2 font-bold text-slate-800">
-        <span className="text-blue-500">{icon}</span>
-        {value}
+      <label style={{ fontSize: '11px', fontWeight: '800', color: '#94a3b8', textTransform: 'uppercase', display: 'block', marginBottom: '5px' }}>{label}</label>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontWeight: '700', color: '#334155' }}>
+        {icon} {value}
       </div>
     </div>
   );

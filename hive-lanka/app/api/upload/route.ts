@@ -14,8 +14,7 @@ export async function POST(request: NextRequest) {
 
     // 1. Get Azure credentials
     const connectionString = process.env.AZURE_STORAGE_CONNECTION_STRING;
-    
-    // 🔥 FIX: Removed the space in 'process. env' and set the correct default container
+    // Fixed the typo here and set default container
     const containerName = process.env.AZURE_STORAGE_CONTAINER_NAME || 'hive-lanka-products';
 
     if (!connectionString) {
@@ -30,28 +29,22 @@ export async function POST(request: NextRequest) {
     const timestamp = Date.now();
     const randomString = Math.random().toString(36).substring(7);
     const fileExtension = file.name.split('.').pop();
-    // Renamed prefix to 'upload-' so it works for both Products and Event Posters
-    const blobName = `upload-${timestamp}-${randomString}.${fileExtension}`;
+    const blobName = `poster-${timestamp}-${randomString}.${fileExtension}`;
 
-    // 4. Upload Logic
+    // 4. Upload
     const blockBlobClient = containerClient.getBlockBlobClient(blobName);
     const arrayBuffer = await file.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
 
     await blockBlobClient.uploadData(buffer, {
-      blobHTTPHeaders: {
-        blobContentType: file.type,
-      },
+      blobHTTPHeaders: { blobContentType: file.type },
     });
 
-    // 5. Get and Return Public URL
+    // 5. Return URL
     const imageUrl = blockBlobClient.url;
     console.log('✅ Upload successful:', imageUrl);
 
-    return NextResponse.json({
-      success: true,
-      url: imageUrl, // The admin page listens for this 'url' key
-    });
+    return NextResponse.json({ success: true, url: imageUrl });
 
   } catch (error: any) {
     console.error('❌ Upload error:', error);
